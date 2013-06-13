@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNet.SignalR.Client.Hubs;
 
-namespace Microsoft.AspNet.SignalR.Client.Samples
+namespace Microsoft.AspNet.SignalR.Client40.Samples
 {
     class Program
     {
         static void Main(string[] args)
         {
-            var writer = Console.Out;
-            var client = new CommonClient(writer);
-            client.RunAsync().Wait();
+            RunRawConnection();
 
             Console.ReadKey();
         }
@@ -21,9 +20,9 @@ namespace Microsoft.AspNet.SignalR.Client.Samples
             var hubConnection = new HubConnection("http://localhost:40476/");
             var proxy = hubConnection.CreateHubProxy("statushub");
 
-            proxy.On<string,string>("joined", (connectionId, date) =>
+            proxy.On<string, string>("joined", (connectionId, date) =>
             {
-                 Console.WriteLine(connectionId + " joined on "+date);   
+                Console.WriteLine(connectionId + " joined on " + date);
             });
 
             Console.Read();

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR.Client.Hubs;
 
@@ -74,6 +75,56 @@ namespace Microsoft.AspNet.SignalR.Client.Samples
             await connection.Start();
             connection.TraceWriter.WriteLine("transport.Name={0}", connection.Transport.Name);
         }
+
+        private async Task RunBasicAuth()
+        {
+            string url = "http://signalr01.cloudapp.net:81/";
+
+            var hubConnection = new HubConnection(url);
+            hubConnection.TraceWriter = _traceWriter;
+            hubConnection.Credentials = new NetworkCredential(@"username", @"password");
+
+            var hubProxy = hubConnection.CreateHubProxy("AuthHub");
+            hubProxy.On<string, string>("invoked", (connectionId, date) => hubConnection.TraceWriter.WriteLine("connectionId={0}, date={1}", connectionId, date));
+
+            await hubConnection.Start();            
+            hubConnection.TraceWriter.WriteLine("transport.Name={0}", hubConnection.Transport.Name);
+
+            await hubProxy.Invoke("InvokedFromClient");
+        }
+
+        private async Task RunWindowsAuth()
+        {
+            string url = "http://localhost:81/";
+
+            var hubConnection = new HubConnection(url);
+            hubConnection.TraceWriter = _traceWriter;
+#if !SILVERLIGHT && !NETFX_CORE
+            hubConnection.Credentials = CredentialCache.DefaultCredentials;
+#endif
+            var hubProxy = hubConnection.CreateHubProxy("AuthHub");
+            hubProxy.On<string, string>("invoked", (connectionId, date) => hubConnection.TraceWriter.WriteLine("connectionId={0}, date={1}", connectionId, date));
+
+            await hubConnection.Start();
+            hubConnection.TraceWriter.WriteLine("transport.Name={0}", hubConnection.Transport.Name);
+
+            await hubProxy.Invoke("InvokedFromClient");
+        }
+
+        private async Task RunHeaderAuthHub()
+        {
+            string url = "http://signalr01.cloudapp.net:81/";
+
+            var hubConnection = new HubConnection(url);
+            hubConnection.TraceWriter = _traceWriter;
+            hubConnection.Headers.Add("username", "john");
+
+            var hubProxy = hubConnection.CreateHubProxy("HeaderAuthHub");
+            hubProxy.On<string>("display", (msg) => hubConnection.TraceWriter.WriteLine(msg));
+
+            await hubConnection.Start();
+            hubConnection.TraceWriter.WriteLine("transport.Name={0}", hubConnection.Transport.Name);
+        }   
     }    
 }
 
