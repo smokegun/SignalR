@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNet.SignalR.Client.Hubs;
+using Microsoft.AspNet.SignalR.Client.Transports;
 
 namespace Microsoft.AspNet.SignalR.Client.Samples
 {
@@ -9,9 +10,31 @@ namespace Microsoft.AspNet.SignalR.Client.Samples
     {
         static void Main(string[] args)
         {
-            RunRawConnection();
-
+            //RunRawConnection();
+            RunEchoHub();
+            //RunStatusHub();
+            //RunRawConnection();
             Console.ReadKey();
+        }
+
+        private static void RunEchoHub()
+        {
+            var hubConnection = new HubConnection("http://localhost:40476/");
+            var proxy = hubConnection.CreateHubProxy("EchoHub");
+
+            proxy.On("Echo", value =>
+            {
+                Console.WriteLine("Value on the client : {0}", value);
+                proxy.Invoke("Echo", value + 1).Wait();
+            });
+
+            hubConnection.TransportConnectTimeout = TimeSpan.FromMinutes(5);
+            hubConnection.Start(new WebSocketTransport()).Wait();
+            
+            Console.WriteLine((hubConnection.State == ConnectionState.Connected) ? "Successfully Connected" : "Unable to connect");
+            Console.ReadKey();
+            
+            proxy.Invoke("Echo", 1).Wait();
         }
 
         private static void RunStatusHub()
@@ -19,14 +42,16 @@ namespace Microsoft.AspNet.SignalR.Client.Samples
             var hubConnection = new HubConnection("http://localhost:40476/");
             var proxy = hubConnection.CreateHubProxy("statushub");
 
-            proxy.On<string,string>("joined", (connectionId, date) =>
+            proxy.On<string, string>("joined", (connectionId, date) =>
             {
-                 Console.WriteLine(connectionId + " joined on "+date);   
+                Console.WriteLine(connectionId + " joined on " + date);
             });
 
             Console.Read();
 
             hubConnection.Start().Wait();
+
+            proxy.Invoke("Ping");
         }
 
         private static void RunHeaderAuthSample(HubConnection hubConnection)

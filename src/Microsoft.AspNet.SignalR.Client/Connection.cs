@@ -633,37 +633,39 @@ namespace Microsoft.AspNet.SignalR.Client
             }
         }
 
-
         [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "This is called by the transport layer")]
         void IConnection.OnReceived(JToken message)
         {
             // Try to buffer only if we're still trying to connect to the server.
             // Need to protect against state changes here
-            lock (_stateLock)
-            {
+            //lock (_stateLock)
+            //{
                 if (!_connectingMessageBuffer.TryBuffer(message))
                 {
                     OnMessageReceived(message);
                 }
-            }
+            //}
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "The exception can be from user code, needs to be a catch all."), SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "This is called by the transport layer")]
         protected virtual void OnMessageReceived(JToken message)
         {
-            if (Received != null)
+            lock (_stateLock)
             {
-                // #1889: We now have a try-catch in the OnMessageReceived handler.  One note about this change is that
-                // messages that are triggered via responses to server invocations will no longer be wrapped in an
-                // aggregate exception due to this change.  This makes the exception throwing behavior consistent across
-                // all types of receive triggers.
-                try
+                if (Received != null)
                 {
-                    Received(message.ToString());
-                }
-                catch (Exception ex)
-                {
-                    OnError(ex);
+                    // #1889: We now have a try-catch in the OnMessageReceived handler.  One note about this change is that
+                    // messages that are triggered via responses to server invocations will no longer be wrapped in an
+                    // aggregate exception due to this change.  This makes the exception throwing behavior consistent across
+                    // all types of receive triggers.
+                    try
+                    {
+                        Received(message.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        OnError(ex);
+                    }
                 }
             }
         }

@@ -278,6 +278,16 @@
              }
         };
 
+        proxies.echoHub = this.createHubProxy('echoHub'); 
+        proxies.echoHub.client = { };
+        proxies.echoHub.server = {
+            echo: function (value) {
+            /// <summary>Calls the Echo method on the server-side EchoHub hub.&#10;Returns a jQuery.Deferred() promise.</summary>
+            /// <param name=\"value\" type=\"Number\">Server side type is System.Int32</param>
+                return proxies.echoHub.invoke.apply(proxies.echoHub, $.merge(["Echo"], $.makeArray(arguments)));
+             }
+        };
+
         proxies.headerAuthHub = this.createHubProxy('headerAuthHub'); 
         proxies.headerAuthHub.client = { };
         proxies.headerAuthHub.server = {
